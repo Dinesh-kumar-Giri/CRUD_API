@@ -3,12 +3,12 @@ import contact from "../models/contactModle.js";
 /**
  * @description Get all contacts
  * @rout GET /api/contacts
- * @access public
+ * @access private
  */
 
 const getContacts = asyncHandler(async (req, res) => {
-  const contacts = await contact.find();
-  console.log("dfakjk", contacts);
+  const contacts = await contact.find({ user_id: req.user.id });
+  console.log("contact-----------", contacts);
   res.status(200).json(contacts);
 });
 
@@ -29,6 +29,7 @@ const createContact = asyncHandler(async (req, res) => {
     name,
     email,
     phone,
+    user_id: req.user.id
   });
   console.log("he------", contactus);
   res.status(201).json(contactus);
@@ -63,6 +64,10 @@ const updateContact = asyncHandler(async (req, res) => {
     throw new Error("contact is not found");
   }
   console.log("before update:-----", Contact);
+  if(Contact.user_id.toString() !== req.user.id){
+    res.status(404);
+    throw new Error("user  don't have permission to update other  user contact")
+  }
   const updateContacts = contact.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
@@ -78,19 +83,21 @@ const updateContact = asyncHandler(async (req, res) => {
 const deleteContact = asyncHandler(async (req, res) => {
   const contactId = req.params.id;
   const Contact = await contact.findById(contactId);
-  
+
   if (!Contact) {
     res.status(404);
     throw new Error("Contact is not found");
   }
-
+  if(Contact.user_id.toString() !== req.user.id){
+    res.status(404);
+    throw new Error("user  don't have permission to delte other  user contact")
+  }
   console.log("Contact before deletion:", Contact);
-  await contact.remove();
+  await contact.delete();
   console.log("Contact after deletion:", Contact);
 
   res.status(200).json({ message: "Contact deleted successfully" });
 });
-
 
 // export default getContact;
 export { getContacts, createContact, getContact, updateContact, deleteContact };

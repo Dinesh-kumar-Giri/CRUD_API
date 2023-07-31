@@ -7,7 +7,9 @@ import {
   updateContact,
   deleteContact,
 } from "../controllers/contactController.js";
+import { validateToken } from "../middleware/uservalidateToken.js";
 
+router.use(validateToken);
 router.route("/").get(getContacts);
 
 router.route("/").post(createContact);
